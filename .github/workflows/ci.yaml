@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  IMG_REPO: registry.cn-hangzhou.aliyuncs.com/douyin/douyin-server
+  IMG_SERVER: https://registry.cn-hangzhou.aliyuncs.com/
+  IMG_NAME: douyin-server
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: login-to-registry
+        uses: aliyun/acr-login@v1
+        with:
+          registry: ${{ env.IMG_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push
+        env:
+          IMG_TAG: ${{ github.sha }}
+        run: |
+          docker build -t ${{ env.IMG_REPO }}:${{ env.IMG_TAG }} .
+          docker push ${{ env.IMG_REPO }}:${{ env.IMG_TAG }}
